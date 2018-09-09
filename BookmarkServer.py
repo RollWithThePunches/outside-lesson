@@ -5,7 +5,9 @@
 import http.server
 import requests
 import os
+import threading
 from urllib.parse import unquote, parse_qs
+from socketserver import ThreadingMixin
 
 memory = {}
 
@@ -106,8 +108,11 @@ class Shortener(http.server.BaseHTTPRequestHandler):
             self.wfile.write(
                 "Couldn't fetch URI '{}'. Sorry!".format(longuri).encode())
 
+class ThreadHTTPServrer(ThreadingMixin, http.server.HTTPServer):
+    "This is an HTTPServer that supports thread-based con currency."
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8000))
     server_address = ('', port)
-    httpd = http.server.HTTPServer(server_address, Shortener)
+    httpd = ThreadHTTPServrer(server_address, shortener)
     httpd.serve_forever()
